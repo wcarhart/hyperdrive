@@ -3,7 +3,7 @@
 <h5 align="center">simple websites powered by <a href="https://www.google.com/drive/" target="_blank">Google Drive</a></h5>
 
 ## About
-Hyperdrive takes a [Google Drive](https://www.google.com/drive/) folder of images and transforms it into a dynamic website to showcase such images.
+Hyperdrive takes a [Google Drive](https://www.google.com/drive/) folder of images and transforms it into a dynamic image showcase website.
 <p align="center"><img alt="Hyperdrive demo screenshot" src="demo.png" /></p>
 
 ## Install
