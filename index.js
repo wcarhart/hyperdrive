@@ -48,7 +48,7 @@ class Hyperdrive {
 		// verify body
 		//  - default: text about Hyperdrive
 		if (this.body === undefined) {
-			this.body = 'Welcome to Hyperdrive! To get started, please check out the README and specify your Google Drive folder ID.'
+			this.body = 'Welcome to Hyperdrive! To get started, please checkout the README on <a href="https://github.com/wcarhart/hyperdrive">Hyperdrive\'s repository</a>.'
 		}
 
 		// verify loading
