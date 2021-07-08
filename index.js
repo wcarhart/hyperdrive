@@ -7,6 +7,8 @@ const errorHandler = require('errorhandler')
 
 const gd = require('./googledrive.js')
 
+// TODO: add custom CSS file
+// TODO: clean up current CSS to not use !important
 class Hyperdrive {
 	constructor(options) {
 		if (options === undefined) options = {}
