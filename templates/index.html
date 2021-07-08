@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>{{hyperdrive-title}}</title>
-	<link rel="shortcut icon" type="image/png" href="favicon.png"/>
+	<link rel="shortcut icon" type="image/png" href="static/{{hyperdrive-favicon}}"/>
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	<script src="https://use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
@@ -20,7 +20,6 @@
 				const container = document.getElementById('content')
 				const data = await getImages()
 				for (let [index, image] of data.entries()) {
-					console.log(image)
 					let card = document.createElement('div')
 					let captionDiv = document.createElement('div')
 					let captionText = document.createElement('p')
@@ -32,8 +31,6 @@
 					captionText.innerHTML = image.name
 					img.setAttribute('src', image.path)
 					img.setAttribute('class', 'img-content card-img lazy')
-					img.setAttribute('width', image.dimensions.width)
-					img.setAttribute('height', image.dimensions.height)
 					if (image.name !== undefined) {
 						img.setAttribute('alt', img.name)
 					} else {
@@ -103,14 +100,14 @@
 		}
 
 		.card-body {
-			background-color: {{hyperdrive-color-caption_background}} !important;
+			background-color: {{hyperdrive-color-caption_background}};
 		}
 
 		.card-text {
 			width: 100%;
 			max-width: 100%;
 			height: auto;
-			color: {{hyperdrive-color-caption_text}} !important;
+			color: {{hyperdrive-color-caption_text}};
 		}
 
 		#intro-title {
@@ -175,6 +172,7 @@
 			}
 		}
 	</style>
+	{{hyperdrive-stylesheet}}
 </head>
 <body>
 	<div id="intro">

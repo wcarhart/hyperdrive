@@ -1,8 +1,6 @@
 const express = require('express')
 const { google } = require('googleapis')
 const convert = require('heic-convert')
-const sizeOf = require('image-size')
-const credentials = require('./credentials.json')
 const fs = require('fs')
 const path = require('path')
 const util = require('util')
@@ -24,7 +22,14 @@ const ImageCache = (options) => {
 	if (options.cache === undefined) {
 		throw Error('Missing publicImageFolder in ImageCache router options')
 	}
+	if (options.credentials === undefined) {
+		throw Error('Missing gcpCredentialFile in ImageCache router options')
+	}
+	if (options.captions === undefined) {
+		throw Error('Missing captions in ImageCache router options')
+	}
 
+	const credentials = require(options.credentials)
 	const router = express.Router()
 
 	// configure GDrive auth
@@ -175,14 +180,22 @@ const ImageCache = (options) => {
 		shuffle(assets)
 		
 		// report back list of IDs so they can be served as static files
-		res.send({
-			status: 200,
-			data: assets.map(a => {return {
-				path: `images/${a}`,
-				name: a.split('.').slice(0, -1).join('.'),
-				dimensions: sizeOf(path.join(options.cache, a))
-			}})
-		})
+		if (options.captions === true) {
+			res.send({
+				status: 200,
+				data: assets.map(a => {return {
+					path: `images/${a}`,
+					name: a.split('.').slice(0, -1).join('.')
+				}})
+			})
+		} else {
+			res.send({
+				status: 200,
+				data: assets.map(a => {return {
+					path: `images/${a}`
+				}})
+			})
+		}
 		next()
 	})
 
@@ -204,7 +217,11 @@ const Cleaner = (options) => {
 	if (options.cache === undefined) {
 		throw Error('Missing publicImageFolder in Cleaner router options')
 	}
+	if (options.credentials === undefined) {
+		throw Error('Missing gcpCredentialFile in Cleaner router options')
+	}
 
+	const credentials = require(options.credentials)
 	const router = express.Router()
 	router.post('/', async (req, res, next) => {
 

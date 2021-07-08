@@ -7,8 +7,6 @@ const errorHandler = require('errorhandler')
 
 const gd = require('./googledrive.js')
 
-// TODO: add custom CSS file
-// TODO: clean up current CSS to not use !important
 class Hyperdrive {
 	constructor(options) {
 		if (options === undefined) options = {}
@@ -26,11 +24,13 @@ class Hyperdrive {
 		this.host = options.host
 		this.sslKeyFile = options.sslKeyFile
 		this.sslCertFile = options.sslCertFile
+		this.gcpCredentialsFile = options.gcpCredentialsFile
 		this.publicAssetsFolder = options.publicAssetsFolder
 		this.publicImagesFolder = options.publicImagesFolder
 		this.templateFolder = options.templateFolder
 		this.staticFolder = options.staticFolder
 		this.landingPage = options.landingPage
+		this.stylesheet = options.stylesheet
 		this.favicon = options.favicon
 		this.colors = options.colors
 		this.app = null
@@ -126,32 +126,62 @@ class Hyperdrive {
 			throw Error('Invalid images endpoint: must start with \'/\'')
 		}
 
-		// verify SSL sslKeyFile and sslCertFile
+		// verify sslKeyFile and sslCertFile
 		//  - if mode is DEV, ignore
 		//  - if mode is PROD, verify sslKeyFile and sslCertFile
+		//  - if mode is PROD, files must exist locally
 		//  - if not using default for sslKeyFile and sslCertFile, host cannot be empty
 		if (this.mode.toLowerCase() === 'prod') {
+			// verify sslKeyFile
 			if (this.sslKeyFile === undefined) {
 				if (this.host === undefined) {
 					throw Error('Invalid configuration: missing host name, cannot use default SSL key file without a host name')
 				}
 			} else {
 				this.sslKeyFile = `/etc/letsencrypt/live/${self.host}/privkey.pem`
+				try {
+					let stats = fs.statSync(this.sslKeyFile)
+					if (!stats.isFile()) throw Error('')
+				} catch (e) {
+					throw Error(`Could not access SSL key file: ${this.sslKeyFile}, does it exist?`)
+				}
 			}
 
+			// verify sslCertFile
 			if (this.sslCertFile === undefined) {
 				if (this.host === undefined) {
 					throw Error('Invalid configuration: missing host name, cannot use default SSL cert file without a host name')
 				}
 			} else {
-				this.sslKeyFile = `/etc/letsencrypt/live/${self.host}/fullchain.pem`
+				this.sslCertFile = `/etc/letsencrypt/live/${self.host}/fullchain.pem`
+				try {
+					let stats = fs.statSync(this.sslCertFile)
+					if (!stats.isFile()) throw Error('')
+				} catch (e) {
+					throw Error(`Could not access SSL cert file: ${this.sslCertFile}, does it exist?`)
+				}
 			}
-			
+		}
+
+		// verify gcpCredentialsFile
+		//  - default: credentials.json
+		//  - file must exist locally
+		if (this.gcpCredentialsFile === undefined) {
+			this.gcpCredentialsFile = path.join(__dirname, 'credentials.json')
+		}
+		if (!this.gcpCredentialsFile.startsWith('/') === true) {
+			this.gcpCredentialsFile = path.join(__dirname, this.gcpCredentialsFile)
+		}
+		try {
+			let stats = fs.statSync(this.gcpCredentialsFile)
+			if (!stats.isFile()) throw Error('')
+		} catch (e) {
+			throw Error(`No such credentials file: ${this.gcpCredentialsFile}`)
 		}
 
 		// verify publicAssetsFolder
 		//  - default: public
-		//  - directory must exist locally
+		//  - directory will be created if does not exist
 		if (this.publicAssetsFolder === undefined) {
 			this.publicAssetsFolder = 'public'
 		}
@@ -162,12 +192,12 @@ class Hyperdrive {
 			let stats = fs.statSync(this.publicAssetsFolder)
 			if (!stats.isDirectory()) throw Error('')
 		} catch (e) {
-			throw Error(`No such public directory: ${this.publicAssetsFolder}, use \`mkdir -p ${this.publicAssetsFolder}\` before continuing`)
+			fs.mkdirSync(this.publicAssetsFolder, { recursive: true })
 		}
 
 		// verify publicImagesFolder
 		//  - default: images
-		//  - directory must exist locally
+		//  - directory will be created if does not exist
 		if (this.publicImagesFolder === undefined) {
 			this.publicImagesFolder = 'images'
 		}
@@ -178,12 +208,12 @@ class Hyperdrive {
 			let stats = fs.statSync(this.publicImagesFolder)
 			if (!stats.isDirectory()) throw Error('')
 		} catch (e) {
-			throw Error(`No such image directory: ${this.publicImagesFolder}, use \`mkdir -p ${this.publicImagesFolder}\` before continuing`)
+			fs.mkdirSync(this.publicImagesFolder, { recursive: true })
 		}
 
 		// verify templateFolder
 		//  - default: templates
-		//  - directory must exist locally
+		//  - directory will be created if does not exist
 		if (this.templateFolder === undefined) {
 			this.templateFolder = 'templates'
 		}
@@ -194,12 +224,12 @@ class Hyperdrive {
 			let stats = fs.statSync(this.templateFolder)
 			if (!stats.isDirectory()) throw Error('')
 		} catch (e) {
-			throw Error(`No such template directory: ${this.templateFolder}, use \`mkdir -p ${this.templateFolder}\` before continuing`)
+			fs.mkdirSync(this.templateFolder, { recursive: true })
 		}
 
 		// verify staticFolder
 		//  - default: templates
-		//  - directory must exist locally
+		//  - directory will be created if does not exist
 		if (this.staticFolder === undefined) {
 			this.staticFolder = 'static'
 		}
@@ -210,7 +240,7 @@ class Hyperdrive {
 			let stats = fs.statSync(this.staticFolder)
 			if (!stats.isDirectory()) throw Error('')
 		} catch (e) {
-			throw Error(`No such static directory: ${this.staticFolder}, use \`mkdir -p ${this.staticFolder}\` before continuing`)
+			fs.mkdirSync(this.staticFolder, { recursive: true })
 		}
 
 		// verify landingPage
@@ -232,9 +262,26 @@ class Hyperdrive {
 			throw Error('Landing page must be located in the templates folder')
 		}
 
+		// verify stylesheet
+		//  - if specified, file must exist locally in this.staticFolder
+		if (this.stylesheet !== undefined) {
+			if (!this.stylesheet.startsWith('/')) {
+				this.stylesheet = path.join(this.staticFolder, this.stylesheet)
+			}
+			try {
+				let stats = fs.statSync(this.stylesheet)
+				if (!stats.isFile()) throw Error('')
+			} catch (e) {
+				throw Error(`No such stylesheet: ${this.stylesheet}`)
+			}
+			if (!this.stylesheet.includes(this.staticFolder)) {
+				throw Error('Stylesheet must be located in the templates folder')
+			}
+		}
+
 		// verify favicon
 		//  - default: favicon.png
-		//  - file must exist locally in this.templateFolder
+		//  - file must exist locally in this.staticFolder
 		if (this.favicon === undefined) {
 			this.favicon = 'favicon.png'
 		}
@@ -291,10 +338,12 @@ class Hyperdrive {
 			host: this.host,
 			sslKeyFile: this.sslKeyFile,
 			sslCertFile: this.sslCertFile,
+			gcpCredentialsFile: this.gcpCredentialsFile,
 			publicAssetsFolder: this.publicAssetsFolder,
 			publicImagesFolder: this.publicImagesFolder,
 			templateFolder: this.templateFolder,
 			landingPage: this.landingPage,
+			stylesheet: this.stylesheet,
 			favicon: this.favicon,
 			colors: this.colors
 		}
@@ -305,11 +354,17 @@ class Hyperdrive {
 		data = data.replace(/{{hyperdrive-title}}/g, this.name)
 		data = data.replace(/{{hyperdrive-body}}/g, this.body)
 		data = data.replace(/{{hyperdrive-loading}}/g, this.loading)
+		data = data.replace(/{{hyperdrive-favicon}}/g, path.basename(this.favicon))
 		data = data.replace(/{{hyperdrive-color-main_background}}/g, this.colors.main_background)
 		data = data.replace(/{{hyperdrive-color-caption_background}}/g, this.colors.caption_background)
 		data = data.replace(/{{hyperdrive-color-main_text}}/g, this.colors.main_text)
 		data = data.replace(/{{hyperdrive-color-caption_text}}/g, this.colors.caption_text)
 		data = data.replace(/{{hyperdrive-color-loading_text}}/g, this.colors.loading_text)
+		if (this.stylesheet !== undefined) {
+			data = data.replace(/{{hyperdrive-stylesheet}}/g, `<link rel="stylesheet" href="static/${path.basename(this.stylesheet)}">`)
+		} else {
+			data = data.replace(/{{hyperdrive-stylesheet}}/g, '')
+		}
 		fs.writeFileSync(to, data)
 	}
 
@@ -340,7 +395,6 @@ class Hyperdrive {
 
 		// build public UI files
 		this.buildPage(this.landingPage, path.join(this.publicAssetsFolder, 'index.html'))
-		fs.copyFileSync(this.favicon, path.join(this.publicAssetsFolder, 'favicon.png'))
 
 		// serve static image files
 		app.use(this.imageEndpoint, express.static(this.publicImagesFolder))
@@ -349,6 +403,8 @@ class Hyperdrive {
 		let config = {
 			id: this.driveFolderId,
 			cache: this.publicImagesFolder,
+			credentials: this.gcpCredentialsFile,
+			captions: this.captions
 		}
 		app.use(this.refreshEndpoint, gd.ImageCache(config))
 		app.use(this.cleanEndpoint, gd.Cleaner(config))
@@ -372,10 +428,6 @@ class Hyperdrive {
 					console.log(JSON.stringify(this.config, null, 2))
 				}
 				console.log(`Listening on port ${this.port}`)
-			}).on('error', (e) => {
-				console.log(e)
-			}).on('exit', (e) => {
-				console.log(e)
 			})
 		} else if (this.mode.toLowerCase() === 'prod') {
 			console.log(`Starting ${this.name} (${this.mode.toUpperCase()})...`)

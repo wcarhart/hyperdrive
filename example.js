@@ -8,6 +8,7 @@ const testConfig = {
 	name: 'Hyperdrive Test App',
 	body: 'This is a Hyperdrive test app, for testing purposes only.',
 	loading: 'Stuff\'s comin\', yo...',
+	stylesheet: 'style.css',
 	colors: {
 		// main_background: '#E0FFFF',
 		// main_text: '#000000'
@@ -15,6 +16,7 @@ const testConfig = {
 }
 
 hyperdrive = new Hyperdrive({
+	verbose: true,
 	mode: 'DEV',
 	driveFolderId: '1_GFHA4I_Ilq7zmxOM8ht_4VrYrThUQ-K'
 })
