@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{hyperdrive-title}}</title>
+	<link rel="shortcut icon" type="image/png" href="favicon.png"/>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="https://use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
+	<script type="module" crossorigin>
+		const init = async () => {
+
+			// get image URLs from backend service
+			const getImages = async () => {
+				let res = await fetch('/refresh', {method: 'POST'})
+				res = await res.json()
+				return res.data
+			}
+
+			const addElements = async () => {
+				const container = document.getElementById('content')
+				const data = await getImages()
+				for (let [index, image] of data.entries()) {
+					console.log(image)
+					let card = document.createElement('div')
+					let captionDiv = document.createElement('div')
+					let captionText = document.createElement('p')
+					let img = document.createElement('img')
+
+					card.setAttribute('class', 'card border-0')
+					captionDiv.setAttribute('class', 'card-body text-center')
+					captionText.setAttribute('class', 'card-text')
+					captionText.innerHTML = image.name
+					img.setAttribute('src', image.path)
+					img.setAttribute('class', 'img-content card-img lazy')
+					img.setAttribute('width', image.dimensions.width)
+					img.setAttribute('height', image.dimensions.height)
+					if (image.name !== undefined) {
+						img.setAttribute('alt', img.name)
+					} else {
+						img.setAttribute('alt', `Dynamically created hyperdrive image ${index}`)
+					}
+
+					captionDiv.appendChild(captionText)
+					card.appendChild(img)
+					if (image.name !== undefined) {
+						card.appendChild(captionDiv)
+					}
+					container.appendChild(card)
+				}
+				await fetch('/clean', {method: 'POST'})
+			}
+
+			await addElements()
+			document.getElementById('loading-text').style.display = 'none'
+		}
+		window.onload = init
+	</script>
+	<style>
+		body {
+			background-color: {{hyperdrive-color-main_background}};
+		}
+
+		#loading-text {
+			color: {{hyperdrive-color-loading_text}};
+			font-style: italic;
+		}
+
+		#intro {
+			position: relative;
+			z-index: 20;
+			top: 8rem;
+			display: table;
+			margin: 0 auto;
+			width: 75%;
+			max-width: 75%;
+			padding-bottom: 2rem;
+		}
+
+		#main {
+			position: relative;
+			z-index: 20;
+			top: 8rem;
+			display: table;
+			margin: 0 auto;
+			width: 75%;
+		}
+
+		.img-content {
+			display: block;
+			max-width: 21rem;
+			width: auto;
+			height: auto;
+			margin: auto;
+		}
+
+		.card {
+			background-color: {{hyperdrive-color-main_background}};
+			max-width: 21rem;
+		}
+
+		.card:hover {
+			z-index: 1000;
+		}
+
+		.card-body {
+			background-color: {{hyperdrive-color-caption_background}} !important;
+		}
+
+		.card-text {
+			width: 100%;
+			max-width: 100%;
+			height: auto;
+			color: {{hyperdrive-color-caption_text}} !important;
+		}
+
+		#intro-title {
+			font-size: 4rem;
+			color: {{hyperdrive-color-main_text}};
+		}
+
+		#intro-text {
+			font-size: 2rem;
+			color: {{hyperdrive-color-main_text}};
+		}
+
+		#content-container {
+			margin: 0 2rem
+		}
+
+		@media (min-width: 48rem) {
+			.card-columns {
+				-webkit-column-count: 2;
+				-moz-column-count: 2;
+				column-count: 2;
+			}
+
+			#content-container {
+				margin: 0;
+			}
+
+			.card-text {
+				font-size: 2rem;
+			}
+		}
+
+		@media (min-width: 62rem) {
+			.card-columns {
+				-webkit-column-count: 3;
+				-moz-column-count: 3;
+				column-count: 3;
+			}
+
+			#content-container {
+				margin: 0 2rem;
+			}
+
+			.card-text {
+				font-size: 1.5rem;
+			}
+		}
+
+		@media (min-width: 75rem) {
+			.card-columns {
+				-webkit-column-count: 4;
+				-moz-column-count: 4;
+				column-count: 4;
+			}
+
+			#content-container {
+				margin: 0 2rem;
+			}
+
+			.card-text {
+				font-size: 1rem;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id="intro">
+		<h1 id="intro-title">{{hyperdrive-title}}</h1>
+		<p id="intro-text">{{hyperdrive-body}}</p>
+		<p id="loading-text"><i class="fas fa-circle-notch fa-spin"></i> {{hyperdrive-loading}}</p>
+	</div>
+	<div id="main">
+		<div id="content-container" class="row">
+			<div id="content" class="card-columns"></div>
+		</div>
+	</div>
+	<div id="bottom"></div>
+</body>
+</html>

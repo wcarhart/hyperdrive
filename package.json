@@ -1,0 +1,14 @@
+{
+  "name": "hyperdrive",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Will Carhart <carhartwill@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "errorhandler": "^1.5.1",
+    "express": "^4.17.1",
+    "googleapis": "^80.2.0",
+    "heic-convert": "^1.2.4",
+    "image-size": "^1.0.0"
+  }
+}
