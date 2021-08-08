@@ -9,10 +9,10 @@ Hyperdrive takes a [Google Drive](https://www.google.com/drive/) folder of image
 ## Install
 Install Hyperdrive with [yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 ```bash
-yarn add hyper-drive
+yarn add @wcarhart/hyperdrive
 ```
 ```bash
-npm install hyper-drive
+npm install @wcarhart/hyperdrive
 ```
 
 ## Setup

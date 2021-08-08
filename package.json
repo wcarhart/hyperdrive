@@ -1,5 +1,5 @@
 {
-  "name": "hyper-drive",
+  "name": "@wcarhart/hyperdrive",
   "version": "1.0.0",
   "description": "Lightweight photo library sites backed by Google Drive",
   "main": "index.js",
