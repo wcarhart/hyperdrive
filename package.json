@@ -1,7 +1,12 @@
 {
-  "name": "hyperdrive",
+  "name": "hyper-drive",
   "version": "1.0.0",
+  "description": "Lightweight photo library sites backed by Google Drive",
   "main": "index.js",
+  "respository": {
+    "url": "https://github.com/wcarhart/hyperdrive",
+    "type": "git"
+  },
   "author": "Will Carhart <carhartwill@gmail.com>",
   "license": "MIT",
   "dependencies": {
